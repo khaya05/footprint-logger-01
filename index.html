@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./script.js" defer></script>
+    <title>Footprint Logger</title>
+  </head>
+  <body>
+    <nav>
+      <p class="logo">EcoTrack</p>
+    </nav>
+
+    <div class="main-container">
+      <section id="form-container">
+        <h2>Log New Activity</h2>
+
+        <form id="activit-form">
+          <div class="flex-inputs">
+            <label for="activityType"
+              >Activity Type:
+              <select id="activity-select">
+                <optgroup label="Transport">
+                  <option value="drive_car_petrol">Drive Car</option>
+                  <option value="bus_ride">Bus Ride</option>
+                  <option value="flight">Flight</option>
+                </optgroup>
+                <optgroup label="Food">
+                  <option value="eat_beef">Eat Beef</option>
+                  <option value="eat_chicken">Eat Chicken</option>
+                  <option value="eat_vegetables">Eat Vegetables</option>
+                </optgroup>
+                <optgroup label="Energy">
+                  <option value="electricity_use">Electricity Use</option>
+                  <option value="hot_shower">Hot Shower</option>
+                  <option value="electric_heater">Electric Heater</option>
+                  <option value="boil_water">Boil Water</option>
+                </optgroup>
+              </select>
+            </label>
+
+            <label for="distance"
+              >Distance (km):
+              <input
+                type="number"
+                id="distance"
+                name="distance"
+                min="0"
+                step="0.1"
+                required
+              />
+            </label>
+          </div>
+
+          <label for="category"
+            >Category
+            <input
+              type="text"
+              id="category"
+              name="category"
+              placeholder="e.g. Energy"
+            />
+          </label>
+
+          <button id="submit" type="submit">+ Add Activity</button>
+        </form>
+      </section>
+
+      <div class="filters">
+        <button type="button">All</button>
+        <button type="button">Food</button>
+        <button type="button">Transport</button>
+        <button type="button">Energy</button>
+        <button type="button">Other</button>
+      </div>
+
+      <!-- Mobile pie chart -->
+      <div id="chart-container">
+        <h2>Carbon Footprint Breakdown</h2>
+        <canvas id="carbonChart"></canvas>
+      </div>
+
+      <div id="activity-list">
+        <h2>Activity Log</h2>
+        <ul id="activities">
+                <li>
+                    <div class="left">
+                        <img src="./assets/car.svg" alt="car icon">
+                        <span class="activity">Drive Car - <span class="amout"> 20km</span></span>
+                    </div>
+                    <span class="co2-amount">4.2 kg CO<span class="symbol">2</span></span>
+                </li>
+            </ul>
+
+        <p class="no-activities">No logged activities</p>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 EcoTrack. All rights reserved.</p>
+      <p>Developed by Thandazani Mnyandu</p>
+    </footer>
+  </body>
+</html>
