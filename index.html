@@ -16,26 +16,26 @@
       <section id="form-container">
         <h2>Log New Activity</h2>
 
-        <form id="activit-form">
+        <form id="activity-form">
           <div class="flex-inputs">
             <label for="activityType"
               >Activity Type:
               <select id="activity-select">
                 <optgroup label="Transport">
-                  <option value="drive_car_petrol">Drive Car</option>
-                  <option value="bus_ride">Bus Ride</option>
-                  <option value="flight">Flight</option>
+                  <option value="Drive Car">Drive Car</option>
+                  <option value="Bus Ride">Bus Ride</option>
+                  <option value="Flight">Flight</option>
                 </optgroup>
                 <optgroup label="Food">
-                  <option value="eat_beef">Eat Beef</option>
-                  <option value="eat_chicken">Eat Chicken</option>
-                  <option value="eat_vegetables">Eat Vegetables</option>
+                  <option value="Eat Beef">Eat Beef</option>
+                  <option value="Eat Chicken">Eat Chicken</option>
+                  <option value="Eat Vegetables">Eat Vegetables</option>
                 </optgroup>
                 <optgroup label="Energy">
-                  <option value="electricity_use">Electricity Use</option>
-                  <option value="hot_shower">Hot Shower</option>
-                  <option value="electric_heater">Electric Heater</option>
-                  <option value="boil_water">Boil Water</option>
+                  <option value="Use Electricity">Use Electricity</option>
+                  <option value="Hot Shower">Hot Shower</option>
+                  <option value="Electric Heater">Electric Heater</option>
+                  <option value="Boil Water">Boil Water</option>
                 </optgroup>
               </select>
             </label>
@@ -75,7 +75,6 @@
         <button type="button">Other</button>
       </div>
 
-      <!-- Mobile pie chart -->
       <div id="chart-container">
         <h2>Carbon Footprint Breakdown</h2>
         <canvas id="carbonChart"></canvas>
@@ -83,31 +82,13 @@
 
       <div id="activity-list">
         <h2>Activity Log</h2>
-        <ul id="activities">
-            <li>
-                <div class="left">
-                    <img src="./assets/car.svg" alt="car icon">
-                    <span class="activity">Drive Car - <span class="amout"> 20km</span></span>
-                </div>
-
-                <span class="co2-amount">4.2 kg CO<span class="symbol">2</span></span>
-
-                <div class="right">
-                    <button type="button" class="edit-btn">
-                      <img src="./assets/check-square.svg" alt="edit-button">
-                    </button>
-                    <button type="button" class="delete-btn">
-                      <img src="./assets/trash.svg" alt="delete icon">
-                    </button>
-                </div>
-            </li>
-        </ul>
+        <ul id="activities"></ul>
 
         <p class="no-activities">No logged activities</p>
       </div>
     </div>
 
-    <div class="notification success">
+    <div class="notification">
       <p>Activity added successfully.</p>
     </div>
 
