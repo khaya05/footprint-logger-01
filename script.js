@@ -4,18 +4,23 @@ const activityType = document.querySelector('#activity-select');
 const distance = document.querySelector('#distance');
 const addActivityBtn = document.querySelector('#submit');
 
-console.log(activityType);
+// edit options
+let editElement;
+let editFlag = false;
+let editID = '';
 
-// Function to create a new activity element
+form.addEventListener('submit', (e) => addActivityBtn(e));
 
-// get values from the form
 
-addActivityBtn.addEventListener('click', (e) => {
+function addActivityBtn(e) {
   e.preventDefault();
+  const activityValue = activityType.value;
 
-  const activityTypeValue = activityType.value;
-  const distanceValue = distance.value;
-
-  console.log('Activity Type:', activityTypeValue);
-  console.log('Distance:', distanceValue);
-});
+  if (activityValue && !editFlag) {
+    // add activity
+  } else if (activityValue && editFlag) {
+    // update activity
+  } else {
+    // update activity
+  }
+}

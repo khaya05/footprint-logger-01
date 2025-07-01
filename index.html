@@ -84,17 +84,31 @@
       <div id="activity-list">
         <h2>Activity Log</h2>
         <ul id="activities">
-                <li>
-                    <div class="left">
-                        <img src="./assets/car.svg" alt="car icon">
-                        <span class="activity">Drive Car - <span class="amout"> 20km</span></span>
-                    </div>
-                    <span class="co2-amount">4.2 kg CO<span class="symbol">2</span></span>
-                </li>
-            </ul>
+            <li>
+                <div class="left">
+                    <img src="./assets/car.svg" alt="car icon">
+                    <span class="activity">Drive Car - <span class="amout"> 20km</span></span>
+                </div>
+
+                <span class="co2-amount">4.2 kg CO<span class="symbol">2</span></span>
+
+                <div class="right">
+                    <button type="button" class="edit-btn">
+                      <img src="./assets/check-square.svg" alt="edit-button">
+                    </button>
+                    <button type="button" class="delete-btn">
+                      <img src="./assets/trash.svg" alt="delete icon">
+                    </button>
+                </div>
+            </li>
+        </ul>
 
         <p class="no-activities">No logged activities</p>
       </div>
+    </div>
+
+    <div class="notification success">
+      <p>Activity added successfully.</p>
     </div>
 
     <footer>
