@@ -99,6 +99,11 @@ select:focus {
   border-color: var(--main-green);
 }
 
+input:disabled{
+  cursor: not-allowed;
+  background-color: lightgray;
+}
+
 form button {
   background-color: var(--main-green);
   color: white;

@@ -21,17 +21,18 @@
             <label for="activityType"
               >Activity Type:
               <select id="activity-select">
-                <optgroup label="Transport">
+                <option value="" disabled selected>Select an option</option>
+                <optgroup label="transport">
                   <option value="Drive Car">Drive Car</option>
                   <option value="Bus Ride">Bus Ride</option>
                   <option value="Flight">Flight</option>
                 </optgroup>
-                <optgroup label="Food">
+                <optgroup label="food">
                   <option value="Eat Beef">Eat Beef</option>
                   <option value="Eat Chicken">Eat Chicken</option>
                   <option value="Eat Vegetables">Eat Vegetables</option>
                 </optgroup>
-                <optgroup label="Energy">
+                <optgroup label="energy">
                   <option value="Use Electricity">Use Electricity</option>
                   <option value="Hot Shower">Hot Shower</option>
                   <option value="Electric Heater">Electric Heater</option>
@@ -41,7 +42,7 @@
             </label>
 
             <label for="distance"
-              >Distance (km):
+              >Amount Transport km, Food (kg), Energy(KWh):
               <input
                 type="number"
                 id="distance"
@@ -60,6 +61,7 @@
               id="category"
               name="category"
               placeholder="e.g. Energy"
+              disabled
             />
           </label>
 
