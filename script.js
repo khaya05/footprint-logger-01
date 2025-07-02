@@ -1,214 +1,133 @@
-const form = document.querySelector('#activity-form');
-const activities = document.querySelector('#activities');
-const activitiesSelect = document.querySelector('#activity-select');
-const distance = document.querySelector('#distance');
-const submitBtn = document.querySelector('#submit');
-const category = document.querySelector('#category');
+// CONSTANTS 
 
-// edit options
-let editElement;
-let editFlag = false;
-let editID = '';
+const EMISSION_FACTORS = {
+  transport: 0.21,
+  energy: 0.92,
+  food: 0.027,
+};
 
-form.addEventListener('submit', (e) => addActivity(e));
+const CATEGORY_CONFIG = {
+  transport: { icon: 'car.svg', altText: 'transport icon', units: ' km' },
+  food: { icon: 'knife-fork.svg', altText: 'food icon', units: ' g' },
+  energy: { icon: 'bolt.svg', altText: 'energy icon', units: ' kWh' },
+};
 
-// clear items event listener btn
+const NOTIFICATION_DURATION = 3000;
 
-activitiesSelect.addEventListener('change', () => {
-  const selectedOption =
-    activitiesSelect.options[activitiesSelect.selectedIndex];
-  const cat = selectedOption.parentElement.label;
-  category.value = cat;
-});
+// DOM ELEMENTS
 
-window.addEventListener('DOMContentLoaded', displayActivities);
+const DOM = {
+  form: document.querySelector('#activity-form'),
+  activities: document.querySelector('#activities'),
+  activitiesSelect: document.querySelector('#activity-select'),
+  distance: document.querySelector('#distance'),
+  submitBtn: document.querySelector('#submit'),
+  category: document.querySelector('#category'),
+  noActivitiesP: document.querySelector('.no-activities'),
+  notification: document.querySelector('.notification'),
+};
 
-function addActivity(e) {
+// STATE
+
+const state = {
+  editElement: null,
+  editFlag: false,
+  editID: '',
+};
+
+// EVENT LISTENERS
+
+function initializeEventListeners() {
+  DOM.form.addEventListener('submit', handleFormSubmit);
+  DOM.activitiesSelect.addEventListener('change', handleActivitySelectChange);
+  window.addEventListener('DOMContentLoaded', displayActivities);
+}
+
+function handleFormSubmit(e) {
   e.preventDefault();
+  addActivity();
+}
 
-  const activityValue = activitiesSelect.value;
-  const distanceValue = Number(distance.value);
-  const { icon, altText, units } = getIcon(category.value);
-  const id = new Date().getTime().toString();
+function handleActivitySelectChange() {
+  const selectedOption =
+    DOM.activitiesSelect.options[DOM.activitiesSelect.selectedIndex];
+  const category = selectedOption.parentElement.label;
+  DOM.category.value = category;
+}
 
-  const amount = calculateEmissions(category.value, distanceValue);
+// ACTIVITY MANAGEMENT
 
-  if (activityValue && !editFlag) {
-    createListItem(
-      id,
-      icon,
-      altText,
-      activityValue,
-      distanceValue,
-      units,
-      amount,
-      category.value
-    );
+function addActivity() {
+  const activityValue = DOM.activitiesSelect.value;
+  const distanceValue = Number(DOM.distance.value);
 
-    // add to local storage
-    addToLocalStorage(
-      id,
-      icon,
-      altText,
-      activityValue,
-      distanceValue,
-      units,
-      amount,
-      category.value
-    );
-  } else if (activityValue && editFlag) {
-    editElement.innerHTML = populateListItem(
-      icon,
-      altText,
-      activityValue,
-      distanceValue,
-      units,
-      amount,
-      category.value
-    );
-    showNotification('Activity updated successfully', 'success');
-    editLocalStorage(
-      editID,
-      icon,
-      altText,
-      activityValue,
-      distanceValue,
-      units,
-      amount,
-      category.value
-    );
-  } else {
+  if (!activityValue) {
     showNotification('Please select an activity', 'error');
+    return;
   }
 
+  if (!distanceValue || distanceValue <= 0) {
+    showNotification('Please enter a valid distance/amount', 'error');
+    return;
+  }
+
+  try {
+    const categoryConfig = getCategoryConfig(DOM.category.value);
+    const id = generateId();
+    const amount = calculateEmissions(DOM.category.value, distanceValue);
+
+    const activityData = {
+      id,
+      ...categoryConfig,
+      activityValue,
+      distanceValue,
+      amount,
+      category: DOM.category.value,
+    };
+
+    if (state.editFlag) {
+      updateActivity(activityData);
+    } else {
+      createActivity(activityData);
+    }
+  } catch (error) {
+    console.error('Error adding activity:', error);
+    showNotification('Error adding activity', 'error');
+  }
+}
+
+function createActivity(activityData) {
+  createListItem(activityData);
+  addToLocalStorage(activityData);
   resetForm();
-}
-
-function createListItem(
-  id,
-  icon,
-  altText,
-  activityValue,
-  distanceValue,
-  units,
-  amount,
-  category
-) {
-  const listItem = document.createElement('li');
-  const attr = document.createAttribute('data-id');
-  attr.value = id;
-  listItem.setAttributeNode(attr);
-
-  listItem.innerHTML = populateListItem(
-    icon,
-    altText,
-    activityValue,
-    distanceValue,
-    units,
-    amount,
-    category
-  );
-
-  activities.appendChild(listItem);
+  hideNoActivities();
   showNotification('Activity added successfully', 'success');
-
-  const deleteBtn = listItem.querySelector('.delete-btn');
-  const editBtn = listItem.querySelector('.edit-btn');
-
-  deleteBtn.addEventListener('click', (e) => deleteActivity(e));
-  editBtn.addEventListener('click', (e) => editActivity(e));
 }
 
-function populateListItem(
-  icon,
-  altText,
-  activityValue,
-  distanceValue,
-  units,
-  amount,
-  category
-) {
-  return `<div class="left">
-        <img src="./assets/${icon}" alt="${altText}">
-        <span class="activity" data-category="${category}">${activityValue} - ${distanceValue}${units}</span>
-      </div>
+function updateActivity(activityData) {
+  state.editElement.innerHTML = populateListItem(activityData);
 
-      <span class="co2-amount">${amount} kg CO<span class="symbol">2</span></span>
+  attachListItemEventListeners(state.editElement);
 
-      <div class="right">
-          <button type="button" class="edit-btn">
-            <img src="./assets/check-square.svg" alt="edit-button">
-          </button>
-          <button type="button" class="delete-btn">
-            <img src="./assets/trash.svg" alt="delete icon">
-          </button>
-      </div>
-   `;
+  editLocalStorage(activityData);
+  resetForm();
+  showNotification('Activity updated successfully', 'success');
 }
 
-const notification = document.querySelector('.notification');
+// DOM MANIPULATION
 
-function showNotification(message, type) {
-  notification.textContent = message;
-  notification.classList.add(type);
+function createListItem(activityData) {
+  const listItem = document.createElement('li');
+  listItem.setAttribute('data-id', activityData.id);
+  listItem.innerHTML = populateListItem(activityData);
 
-  setTimeout(() => {
-    notification.textContent = '';
-    notification.classList.remove(type);
-  }, 3000);
+  DOM.activities.appendChild(listItem);
+
+  attachListItemEventListeners(listItem);
 }
 
-// ***** CALCULATE EMISSIONS *****
-function getIcon(category) {
-  switch (category) {
-    case 'transport':
-      return { icon: 'car.svg', altText: 'transport icon', units: ' km' };
-    case 'food':
-      return { icon: 'knife-fork.svg', altText: 'food icon', units: ' g' };
-    case 'energy':
-      return { icon: 'bolt.svg', altText: 'energy icon', units: ' kWh' };
-  }
-}
-
-function calculateEmissions(category, amount) {
-  const emissionFactors = {
-    transport: 0.21,
-    energy: 0.92,
-    food: 0.027,
-  };
-
-  const factor = emissionFactors[category];
-  if (!factor) {
-    throw new Error('Invalid category');
-  }
-
-  const emissions = amount * factor;
-  return emissions.toFixed(3);
-}
-
-// ***** LOCAL STORAGE FUNCTIONS *****
-function getLocalStorage() {
-  return localStorage.getItem('activities')
-    ? JSON.parse(localStorage.getItem('activities'))
-    : [];
-}
-
-function setLocalStorage(activities) {
-  localStorage.setItem('activities', JSON.stringify(activities));
-}
-
-function addToLocalStorage(
-  id,
-  icon,
-  altText,
-  activityValue,
-  distanceValue,
-  units,
-  amount,
-  category
-) {
-  const activity = {
-    id,
+function populateListItem(activityData) {
+  const {
     icon,
     altText,
     activityValue,
@@ -216,95 +135,183 @@ function addToLocalStorage(
     units,
     amount,
     category,
-  };
+  } = activityData;
 
-  let activities = getLocalStorage();
+  return `
+    <div class="left">
+      <img src="./assets/${icon}" alt="${altText}">
+      <span class="activity" data-category="${category}">
+        ${activityValue} - ${distanceValue}${units}
+      </span>
+    </div>
+    <span class="co2-amount">
+      ${amount} kg CO<span class="symbol">2</span>
+    </span>
+    <div class="right">
+      <button type="button" class="edit-btn">
+        <img src="./assets/check-square.svg" alt="edit-button">
+      </button>
+      <button type="button" class="delete-btn">
+        <img src="./assets/trash.svg" alt="delete icon">
+      </button>
+    </div>
+  `;
+}
 
-  activities.push(activity);
+function attachListItemEventListeners(listItem) {
+  const deleteBtn = listItem.querySelector('.delete-btn');
+  const editBtn = listItem.querySelector('.edit-btn');
 
+  deleteBtn.addEventListener('click', handleDeleteActivity);
+  editBtn.addEventListener('click', handleEditActivity);
+}
+
+// EDIT & DELETE FUNCTIONALITY
+
+function handleEditActivity(e) {
+  const element = e.currentTarget.parentElement.parentElement;
+  const activity = element.querySelector('.activity');
+
+  state.editElement = element;
+  state.editID = element.dataset.id;
+  state.editFlag = true;
+
+  const [currActivity, currAmountText] = activity.innerHTML.trim().split(' - ');
+  const currAmount = parseFloat(currAmountText.match(/[\d.]+/)[0]);
+
+  DOM.activitiesSelect.value = currActivity;
+  DOM.distance.value = currAmount;
+  DOM.category.value = activity.dataset.category;
+  DOM.submitBtn.textContent = 'Update Activity';
+}
+
+function handleDeleteActivity(e) {
+  const element = e.currentTarget.parentElement.parentElement;
+  const id = element.dataset.id;
+
+  DOM.activities.removeChild(element);
+
+  removeFromLocalStorage(id);
+
+  if (DOM.activities.children.length === 0) {
+    showNoActivities();
+  }
+
+  showNotification('Activity deleted successfully', 'success');
+  resetForm();
+}
+
+function getCategoryConfig(category) {
+  const config = CATEGORY_CONFIG[category];
+  if (!config) {
+    throw new Error(`Invalid category: ${category}`);
+  }
+  return config;
+}
+
+function calculateEmissions(category, amount) {
+  const factor = EMISSION_FACTORS[category];
+  if (!factor) {
+    throw new Error(`Invalid category: ${category}`);
+  }
+
+  const emissions = amount * factor;
+  return emissions.toFixed(3);
+}
+
+function generateId() {
+  return new Date().getTime().toString();
+}
+
+function resetForm() {
+  DOM.activitiesSelect.value = '';
+  DOM.distance.value = '';
+  DOM.category.value = 'n/a';
+  DOM.submitBtn.textContent = '+ Add Activity';
+
+  state.editFlag = false;
+  state.editID = '';
+  state.editElement = null;
+}
+
+// NOTIFICATION
+
+function showNotification(message, type) {
+  DOM.notification.textContent = message;
+  DOM.notification.classList.add(type);
+
+  setTimeout(() => {
+    DOM.notification.textContent = '';
+    DOM.notification.classList.remove(type);
+  }, NOTIFICATION_DURATION);
+}
+
+// LOCAL STORAGE 
+
+function getLocalStorage() {
+  try {
+    const data = localStorage.getItem('activities');
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error reading from localStorage:', error);
+    return [];
+  }
+}
+
+function setLocalStorage(activities) {
+  try {
+    localStorage.setItem('activities', JSON.stringify(activities));
+  } catch (error) {
+    console.error('Error writing to localStorage:', error);
+    showNotification('Error saving data', 'error');
+  }
+}
+
+function addToLocalStorage(activityData) {
+  const activities = getLocalStorage();
+  activities.push(activityData);
   setLocalStorage(activities);
 }
 
 function removeFromLocalStorage(id) {
-  let activities = getLocalStorage();
-  activities = activities.filter((activity) => activity.id !== id);
-  setLocalStorage(activities);
+  const activities = getLocalStorage();
+  const filteredActivities = activities.filter(
+    (activity) => activity.id !== id
+  );
+  setLocalStorage(filteredActivities);
 }
 
-function resetForm() {
-  activitiesSelect.value = '';
-  distance.value = '';
-  category.value = 'n/a';
-  editFlag = false;
-  editID = '';
-  submitBtn.textContent = '+ Add Activity';
-}
-
-function editLocalStorage(
-  id,
-  icon,
-  altText,
-  activityValue,
-  distanceValue,
-  units,
-  amount,
-  category
-) {
-  let activities = getLocalStorage();
-
+function editLocalStorage(activityData) {
+  const activities = getLocalStorage();
   const updatedActivities = activities.map((activity) => {
-    if (activity.id === id) {
-      return {
-        id,
-        icon,
-        altText,
-        activityValue,
-        distanceValue,
-        units,
-        amount,
-        category,
-      };
-    }
-    return activity;
+    return activity.id === activityData.id ? activityData : activity;
   });
-
   setLocalStorage(updatedActivities);
 }
 
-// ***** EDIT AND DELETE FUNCTIONS *****
-function editActivity(e) {
-  const element = e.currentTarget.parentElement.parentElement;
-  const activity = element.querySelector('.activity');
-  editElement = element;
+// DISPLAY FUNCTIONS
 
-  let currId = element.dataset.id;
-  let [currActivity, currAmount] = activity.innerHTML.split(' - ');
+function displayActivities() {
+  const activities = getLocalStorage();
 
-  let currEmission = currAmount.match(/[\d.]+(?=\s*\w+)/)[0];
-
-  activitiesSelect.value = currActivity;
-  distance.value = Number(currEmission);
-  category.value = activity.dataset.category;
-
-  editFlag = true;
-  editID = currId;
-  submitBtn.textContent = 'Update Activity';
+  if (activities.length > 0) {
+    activities.forEach((activity) => {
+      createListItem(activity);
+    });
+    hideNoActivities();
+  } else {
+    showNoActivities();
+  }
 }
 
-function deleteActivity(e) {
-  const element = e.currentTarget.parentElement.parentElement;
-  const id = element.dataset.id;
-  activities.removeChild(element);
-
-  // if (activities.children.length === 0) {
-  //   // show p
-  // }
-  showNotification('Activity deleted successfully', 'success');
-  resetForm();
-
-  // remove from local storage
-  removeFromLocalStorage(id);
+function showNoActivities() {
+  DOM.noActivitiesP.classList.remove('none');
 }
+
+function hideNoActivities() {
+  DOM.noActivitiesP.classList.add('none');
+}
+
 
 function clearActivities() {
   const activitiesList = document.querySelectorAll('#activities li');
@@ -315,43 +322,21 @@ function clearActivities() {
   }
 
   activitiesList.forEach((item) => {
-    activities.removeChild(item);
+    DOM.activities.removeChild(item);
   });
 
-  // show p
+  setLocalStorage([]);
+
+  showNoActivities();
   showNotification('All activities cleared', 'success');
   resetForm();
-  // clear local storage
 }
 
-function displayActivities() {
-  let activities = getLocalStorage();
+// INITIALIZATION
 
-  if (activities.length > 0) {
-    activities.forEach((activity) => {
-      const {
-        id,
-        icon,
-        altText,
-        activityValue,
-        distanceValue,
-        units,
-        amount,
-        category,
-      } = activity;
-      createListItem(
-        id,
-        icon,
-        altText,
-        activityValue,
-        distanceValue,
-        units,
-        amount,
-        category
-      );
-    });
-  } else {
-    // show p
-    console.log('list empty');
-  }
+function init() {
+  initializeEventListeners();
+  displayActivities();
 }
+
+init();

@@ -280,3 +280,7 @@ footer {
     width: 100%;
   }
 }
+
+.none{
+  display: none;
+}
