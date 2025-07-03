@@ -101,6 +101,7 @@ function createActivity(activityData) {
   addToLocalStorage(activityData);
   resetForm();
   hideNoActivities();
+  updateChart();
   showNotification('Activity added successfully', 'success');
 }
 
@@ -108,7 +109,7 @@ function updateActivity(activityData) {
   state.editElement.innerHTML = populateListItem(activityData);
 
   attachListItemEventListeners(state.editElement);
-
+  updateChart();
   editLocalStorage(activityData);
   resetForm();
   showNotification('Activity updated successfully', 'success');
@@ -198,6 +199,7 @@ function handleDeleteActivity(e) {
   }
 
   showNotification('Activity deleted successfully', 'success');
+  updateChart();
   resetForm();
 }
 
@@ -246,7 +248,7 @@ function showNotification(message, type) {
   }, NOTIFICATION_DURATION);
 }
 
-// LOCAL STORAGE 
+// LOCAL STORAGE
 
 function getLocalStorage() {
   try {
@@ -312,7 +314,6 @@ function hideNoActivities() {
   DOM.noActivitiesP.classList.add('none');
 }
 
-
 function clearActivities() {
   const activitiesList = document.querySelectorAll('#activities li');
 
@@ -332,11 +333,109 @@ function clearActivities() {
   resetForm();
 }
 
-// INITIALIZATION
+function getTotals() {
+  const activities = getLocalStorage();
+  const totals = {
+    transport: 0,
+    energy: 0,
+    food: 0,
+  };
 
-function init() {
-  initializeEventListeners();
-  displayActivities();
+  activities.forEach((activity) => {
+    totals[activity.category] += parseFloat(activity.amount);
+  });
+
+  return totals;
 }
 
-init();
+// CHART
+let chart;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.querySelector('#carbonChart').getContext('2d');
+  chart = createChart(ctx);
+});
+
+function getLabels() {
+  return Object.keys(getTotals()).filter(
+    (category) => getTotals()[category] > 0
+  );
+}
+
+function getTotalEmissions() {
+  return Object.values(getTotals()).reduce((a, b) => a + b, 0);
+}
+
+function createChart(ctx) {
+  const data = {
+    labels: getLabels(),
+    datasets: [
+      {
+        data: Object.values(getTotals()),
+        label: 'Carbon Footprint (kg CO2)',
+        backgroundColor: ['#137113ff', '#4cae4f', '#b1f2b1ff'],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+    },
+  };
+
+  const centerTextPlugin = {
+    id: 'centerText',
+    beforeDraw(chart) {
+      const { width, height, ctx } = chart;
+      const total = getTotalEmissions() || 0;
+
+      ctx.restore();
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      ctx.font = 'bold 18px Poppins, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#333';
+      ctx.fillText(`${total.toFixed(3)} kg`, centerX, centerY - 10);
+
+      ctx.font = '14px Poppins, sans-serif';
+      ctx.fillStyle = '#666';
+      ctx.fillText('CO₂', centerX, centerY + 12);
+
+      ctx.save();
+    },
+  };
+
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data,
+    options,
+    plugins: [centerTextPlugin],
+  });
+}
+
+function updateChart() {
+  const newData = Object.values(getTotals());
+  const newLabels = getLabels();
+  const total = getTotalEmissions();
+
+  chart.data.datasets[0].data = newData;
+  chart.data.labels = newLabels;
+  chart.options.plugins.total = total;
+  chart.update();
+}
+
+// INITIALIZATION
+
+(function init() {
+  createChart();
+  initializeEventListeners();
+  displayActivities();
+})();
+

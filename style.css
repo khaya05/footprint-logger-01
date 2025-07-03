@@ -156,7 +156,6 @@ label, input, select {
 }
 
 .filters button.active {
-  /* background-color: var(--btn); */
   background-color: var(--main-green);
   color: white;
 }
@@ -185,6 +184,11 @@ label, input, select {
   border-radius: 0.5rem;
   border: 1px solid var(--light-gray);
   box-shadow: var(--shadow);
+}
+
+.left{
+  width: 250px;
+  justify-content: right;
 }
 
 i {
