@@ -1,15 +1,43 @@
-// CONSTANTS 
+// CONSTANTS
 
 const EMISSION_FACTORS = {
-  transport: 0.21,
-  energy: 0.92,
-  food: 0.027,
+  transport: {
+    'Bus Ride': 0.1,
+    'Drive Car': 0.21,
+    Flight: 0.255,
+  },
+  food: {
+    'Eat Beef': 27.0,
+    'Eat Chicken': 6.9,
+    'Eat Vegetables': 2.0,
+  },
+  energy: {
+    'Use Electricity': 0.92,
+    'Boil Water': 0.06,
+    'Electric Heater': 1.5,
+    'Hot Shower': 1.0,
+  },
 };
 
 const CATEGORY_CONFIG = {
-  transport: { icon: 'car.svg', altText: 'transport icon', units: ' km' },
-  food: { icon: 'knife-fork.svg', altText: 'food icon', units: ' g' },
-  energy: { icon: 'bolt.svg', altText: 'energy icon', units: ' kWh' },
+  transport: {
+    icon: 'car.svg',
+    altText: 'transport icon',
+    units: ' km',
+    label: 'Distance (km)',
+  },
+  food: {
+    icon: 'knife-fork.svg',
+    altText: 'food icon',
+    units: ' Kg',
+    label: 'Weight (Kg)',
+  },
+  energy: {
+    icon: 'bolt.svg',
+    altText: 'energy icon',
+    units: ' kWh',
+    label: 'Energy (kWh)',
+  },
 };
 
 const NOTIFICATION_DURATION = 3000;
@@ -25,6 +53,7 @@ const DOM = {
   category: document.querySelector('#category'),
   noActivitiesP: document.querySelector('.no-activities'),
   notification: document.querySelector('.notification'),
+  distanceLabel: document.querySelector('label[for="distance"]'),
 };
 
 // STATE
@@ -53,6 +82,24 @@ function handleActivitySelectChange() {
     DOM.activitiesSelect.options[DOM.activitiesSelect.selectedIndex];
   const category = selectedOption.parentElement.label;
   DOM.category.value = category;
+
+  updateDistanceLabel(category);
+}
+
+function updateDistanceLabel(category) {
+  const config = CATEGORY_CONFIG[category];
+  if (config && DOM.distanceLabel) {
+    DOM.distanceLabel.innerHTML = `${config.label}:
+      <input
+        type="number"
+        id="distance"
+        name="distance"
+        min="0"
+        step="0.1"
+      />`;
+
+    DOM.distance = document.querySelector('#distance');
+  }
 }
 
 // ACTIVITY MANAGEMENT
@@ -73,8 +120,12 @@ function addActivity() {
 
   try {
     const categoryConfig = getCategoryConfig(DOM.category.value);
-    const id = generateId();
-    const amount = calculateEmissions(DOM.category.value, distanceValue);
+    const id = state.editFlag ? state.editID : generateId();
+    const amount = calculateEmissions(
+      activityValue,
+      DOM.category.value,
+      distanceValue
+    );
 
     const activityData = {
       id,
@@ -109,8 +160,10 @@ function updateActivity(activityData) {
   state.editElement.innerHTML = populateListItem(activityData);
 
   attachListItemEventListeners(state.editElement);
-  updateChart();
+
   editLocalStorage(activityData);
+
+  updateChart();
   resetForm();
   showNotification('Activity updated successfully', 'success');
 }
@@ -184,6 +237,8 @@ function handleEditActivity(e) {
   DOM.distance.value = currAmount;
   DOM.category.value = activity.dataset.category;
   DOM.submitBtn.textContent = 'Update Activity';
+
+  updateDistanceLabel(activity.dataset.category);
 }
 
 function handleDeleteActivity(e) {
@@ -211,8 +266,8 @@ function getCategoryConfig(category) {
   return config;
 }
 
-function calculateEmissions(category, amount) {
-  const factor = EMISSION_FACTORS[category];
+function calculateEmissions(activity, category, amount) {
+  const factor = EMISSION_FACTORS[category][activity];
   if (!factor) {
     throw new Error(`Invalid category: ${category}`);
   }
@@ -234,6 +289,19 @@ function resetForm() {
   state.editFlag = false;
   state.editID = '';
   state.editElement = null;
+
+  if (DOM.distanceLabel) {
+    DOM.distanceLabel.innerHTML = `Amount:
+      <input
+        type="number"
+        id="distance"
+        name="distance"
+        min="0"
+        step="0.1"
+      />`;
+
+    DOM.distance = document.querySelector('#distance');
+  }
 }
 
 // NOTIFICATION
@@ -351,11 +419,6 @@ function getTotals() {
 // CHART
 let chart;
 
-window.addEventListener('DOMContentLoaded', () => {
-  const ctx = document.querySelector('#carbonChart').getContext('2d');
-  chart = createChart(ctx);
-});
-
 function getLabels() {
   return Object.keys(getTotals()).filter(
     (category) => getTotals()[category] > 0
@@ -421,6 +484,8 @@ function createChart(ctx) {
 }
 
 function updateChart() {
+  if (!chart) return;
+
   const newData = Object.values(getTotals());
   const newLabels = getLabels();
   const total = getTotalEmissions();
@@ -433,9 +498,14 @@ function updateChart() {
 
 // INITIALIZATION
 
-(function init() {
-  createChart();
+function init() {
   initializeEventListeners();
   displayActivities();
-})();
 
+  const ctx = document.querySelector('#carbonChart');
+  if (ctx) {
+    chart = createChart(ctx.getContext('2d'));
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
