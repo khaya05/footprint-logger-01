@@ -54,6 +54,7 @@ const DOM = {
   noActivitiesP: document.querySelector('.no-activities'),
   notification: document.querySelector('.notification'),
   distanceLabel: document.querySelector('label[for="distance"]'),
+  filters: document.querySelector('.filters'),
 };
 
 // STATE
@@ -62,6 +63,7 @@ const state = {
   editElement: null,
   editFlag: false,
   editID: '',
+  currentFilter: 'All',
 };
 
 // EVENT LISTENERS
@@ -70,6 +72,10 @@ function initializeEventListeners() {
   DOM.form.addEventListener('submit', handleFormSubmit);
   DOM.activitiesSelect.addEventListener('change', handleActivitySelectChange);
   window.addEventListener('DOMContentLoaded', displayActivities);
+
+  [...DOM.filters.children].forEach((btn) =>
+    btn.addEventListener('click', (e) => filterActivities(e))
+  );
 }
 
 function handleFormSubmit(e) {
@@ -152,7 +158,9 @@ function createActivity(activityData) {
   addToLocalStorage(activityData);
   resetForm();
   hideNoActivities();
-  updateChart();
+
+  const filteredActivities = getFilteredActivities();
+  updateChartWithData(filteredActivities);
   showNotification('Activity added successfully', 'success');
 }
 
@@ -163,9 +171,39 @@ function updateActivity(activityData) {
 
   editLocalStorage(activityData);
 
-  updateChart();
+  const filteredActivities = getFilteredActivities();
+  updateChartWithData(filteredActivities);
   resetForm();
   showNotification('Activity updated successfully', 'success');
+}
+
+function filterActivities(e) {
+  const btns = [...DOM.filters.children];
+  btns.forEach((btn) => {
+    btn.classList.remove('active');
+    if (btn === e.currentTarget) {
+      btn.classList.add('active');
+    }
+  });
+
+  state.currentFilter = e.currentTarget.textContent;
+
+  const filteredActivities = getFilteredActivities();
+
+  updateChartWithData(filteredActivities);
+  displayActivities(filteredActivities);
+}
+
+function getFilteredActivities() {
+  const activities = getLocalStorage();
+
+  if (state.currentFilter === 'All') {
+    return activities;
+  }
+
+  return activities.filter((activity) => {
+    return activity.category === state.currentFilter.toLowerCase();
+  });
 }
 
 // DOM MANIPULATION
@@ -254,7 +292,10 @@ function handleDeleteActivity(e) {
   }
 
   showNotification('Activity deleted successfully', 'success');
-  updateChart();
+
+  // Update chart with current filter after deletion
+  const filteredActivities = getFilteredActivities();
+  updateChartWithData(filteredActivities);
   resetForm();
 }
 
@@ -361,9 +402,8 @@ function editLocalStorage(activityData) {
 
 // DISPLAY FUNCTIONS
 
-function displayActivities() {
-  const activities = getLocalStorage();
-
+function displayActivities(activities) {
+  clearActivities();
   if (activities.length > 0) {
     activities.forEach((activity) => {
       createListItem(activity);
@@ -385,31 +425,20 @@ function hideNoActivities() {
 function clearActivities() {
   const activitiesList = document.querySelectorAll('#activities li');
 
-  if (activitiesList.length === 0) {
-    showNotification('No activities to clear', 'error');
-    return;
-  }
-
   activitiesList.forEach((item) => {
     DOM.activities.removeChild(item);
   });
-
-  setLocalStorage([]);
-
-  showNoActivities();
-  showNotification('All activities cleared', 'success');
-  resetForm();
 }
 
-function getTotals() {
-  const activities = getLocalStorage();
+function getTotals(activities = null) {
+  const activitiesData = activities || getLocalStorage();
   const totals = {
     transport: 0,
     energy: 0,
     food: 0,
   };
 
-  activities.forEach((activity) => {
+  activitiesData.forEach((activity) => {
     totals[activity.category] += parseFloat(activity.amount);
   });
 
@@ -419,14 +448,14 @@ function getTotals() {
 // CHART
 let chart;
 
-function getLabels() {
-  return Object.keys(getTotals()).filter(
-    (category) => getTotals()[category] > 0
-  );
+function getLabels(activities = null) {
+  const totals = getTotals(activities);
+  return Object.keys(totals).filter((category) => totals[category] > 0);
 }
 
-function getTotalEmissions() {
-  return Object.values(getTotals()).reduce((a, b) => a + b, 0);
+function getTotalEmissions(activities = null) {
+  const totals = getTotals(activities);
+  return Object.values(totals).reduce((a, b) => a + b, 0);
 }
 
 function createChart(ctx) {
@@ -455,7 +484,7 @@ function createChart(ctx) {
     id: 'centerText',
     beforeDraw(chart) {
       const { width, height, ctx } = chart;
-      const total = getTotalEmissions() || 0;
+      const total = getTotalEmissions(getFilteredActivities()) || 0;
 
       ctx.restore();
       const centerX = width / 2;
@@ -483,24 +512,28 @@ function createChart(ctx) {
   });
 }
 
-function updateChart() {
+function updateChartWithData(activities) {
   if (!chart) return;
 
-  const newData = Object.values(getTotals());
-  const newLabels = getLabels();
-  const total = getTotalEmissions();
+  const totals = getTotals(activities);
+  const newData = Object.values(totals);
+  const newLabels = getLabels(activities);
 
   chart.data.datasets[0].data = newData;
   chart.data.labels = newLabels;
-  chart.options.plugins.total = total;
   chart.update();
+}
+
+function updateChart() {
+  const filteredActivities = getFilteredActivities();
+  updateChartWithData(filteredActivities);
 }
 
 // INITIALIZATION
 
 function init() {
   initializeEventListeners();
-  displayActivities();
+  displayActivities(getLocalStorage());
 
   const ctx = document.querySelector('#carbonChart');
   if (ctx) {
