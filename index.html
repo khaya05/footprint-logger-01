@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./script.js" defer></script>
+  <title>Footprint Logger</title>
+</head>
+
+<body>
+  <nav>
+    <p class="logo">EcoTrack</p>
+  </nav>
+
+  <div class="main-container">
+    <section id="form-container">
+      <h2>Log New Activity</h2>
+
+      <form id="activity-form">
+        <div class="flex-inputs">
+          <label for="activityType">Activity Type:
+            <select id="activity-select">
+              <option value="" disabled selected>Select an option</option>
+              <optgroup label="transport">
+                <option value="Drive Car">Drive Car</option>
+                <option value="Bus Ride">Bus Ride</option>
+                <option value="Flight">Flight</option>
+              </optgroup>
+              <optgroup label="food">
+                <option value="Eat Beef">Eat Beef</option>
+                <option value="Eat Chicken">Eat Chicken</option>
+                <option value="Eat Vegetables">Eat Vegetables</option>
+              </optgroup>
+              <optgroup label="energy">
+                <option value="Use Electricity">Use Electricity</option>
+                <option value="Hot Shower">Hot Shower</option>
+                <option value="Electric Heater">Electric Heater</option>
+                <option value="Boil Water">Boil Water</option>
+              </optgroup>
+            </select>
+          </label>
+
+          <label for="distance">Amount:
+            <input type="number" id="distance" name="distance" min="0" step="0.1" />
+          </label>
+        </div>
+
+        <label for="category">Category
+          <input type="text" id="category" name="category" placeholder="e.g. Energy" disabled />
+        </label>
+
+        <button id="submit" type="submit">+ Add Activity</button>
+      </form>
+    </section>
+
+    <div class="filters">
+      <button type="button" class="active">All</button>
+      <button type="button">Food</button>
+      <button type="button">Transport</button>
+      <button type="button">Energy</button>
+    </div>
+
+    <div id="chart-container">
+      <h2>Carbon Footprint Breakdown</h2>
+      <canvas id="carbonChart"></canvas>
+    </div>
+
+    <div id="activity-list">
+      <h2>Activity Log</h2>
+      <ul id="activities"></ul>
+
+      <p class="no-activities">No logged activities</p>
+    </div>
+  </div>
+
+  <div class="notification">
+    <p>Activity added successfully.</p>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 EcoTrack. All rights reserved.</p>
+    <p>Developed by Thandazani Mnyandu</p>
+  </footer>
+</body>
+
+</html>
