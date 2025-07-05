@@ -236,16 +236,18 @@ function populateListItem(activityData) {
         ${activityValue} - ${distanceValue}${units}
       </span>
     </div>
-    <span class="co2-amount">
-      ${amount} kg CO<span class="symbol">2</span>
-    </span>
     <div class="right">
-      <button type="button" class="edit-btn">
-        <img src="./assets/check-square.svg" alt="edit-button">
-      </button>
-      <button type="button" class="delete-btn">
-        <img src="./assets/trash.svg" alt="delete icon">
-      </button>
+      <span class="co2-amount">
+        ${amount} kg CO<span class="symbol">2</span>
+      </span>
+      <div class="btn-container">
+        <button type="button" class="edit-btn">
+          <img src="./assets/check-square.svg" alt="edit-button">
+        </button>
+        <button type="button" class="delete-btn">
+          <img src="./assets/trash.svg" alt="delete icon">
+        </button>
+      </div>
     </div>
   `;
 }
@@ -258,10 +260,18 @@ function attachListItemEventListeners(listItem) {
   editBtn.addEventListener('click', handleEditActivity);
 }
 
+function scrollTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+}
+
 // EDIT & DELETE FUNCTIONALITY
 
 function handleEditActivity(e) {
-  const element = e.currentTarget.parentElement.parentElement;
+  scrollTop();
+  const element = e.currentTarget.parentElement.parentElement.parentElement;
   const activity = element.querySelector('.activity');
 
   state.editElement = element;
@@ -280,7 +290,8 @@ function handleEditActivity(e) {
 }
 
 function handleDeleteActivity(e) {
-  const element = e.currentTarget.parentElement.parentElement;
+  const element = e.currentTarget.parentElement.parentElement.parentElement;
+  console.log('Deleting activity:', element);
   const id = element.dataset.id;
 
   DOM.activities.removeChild(element);
@@ -291,9 +302,9 @@ function handleDeleteActivity(e) {
     showNoActivities();
   }
 
+  scrollTop();
   showNotification('Activity deleted successfully', 'success');
 
-  // Update chart with current filter after deletion
   const filteredActivities = getFilteredActivities();
   updateChartWithData(filteredActivities);
   resetForm();

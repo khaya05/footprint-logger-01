@@ -6,6 +6,7 @@
   --txt-gray: #8c8d8bff;
   --txt-black: #242524ff;
   --shadow: 0px 0px 1px #171a1f12, 0px 0px 2px #171a1f1f;
+  --big-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 * {
@@ -20,18 +21,20 @@ body {
   margin: 0;
   max-width: 1110px;
   margin-inline: auto;
-  height: 100vh;
   position: relative;
+}
+
+
+.main-container {
+  margin-inline: 1rem;
 }
 
 @media (min-width: 768px) {
   body {
-    box-shadow: var(--shadow);
+    box-shadow: var(--big-shadow);
+    max-width: 768px;
+    margin-inline: auto;
   }
-}
-
-.main-container {
-  margin-inline: 1rem;
 }
 
 @media (min-width: 1110px) {
@@ -39,6 +42,11 @@ body {
     position: relative;
     width: 60%;
     max-width: 907px;
+  }
+  
+  body{
+    max-width: 1440px;
+    border-radius: 10px;
   }
 }
 
@@ -166,6 +174,7 @@ label, input, select {
   box-shadow: var(--shadow);
   padding: 25px;
   margin-bottom: 25px;
+  max-height: 50rem;
 }
 
 @media (min-width: 1110px) {
@@ -179,6 +188,7 @@ label, input, select {
 }
 
 #activity-list {
+  font-size: 11px;
   margin-bottom: 25px;
   padding: 25px;
   border-radius: 0.5rem;
@@ -186,20 +196,30 @@ label, input, select {
   box-shadow: var(--shadow);
 }
 
-.left{
-  width: 250px;
-  justify-content: right;
-}
-
 i {
   color: var(--main-green);
 }
 
 li,
-.left {
+.left, .right {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.right{
+  gap:.5rem;
+}
+
+@media (min-width: 768px) {
+  .right{
+    width: 50%
+  }
+
+  #activity-list {
+    font-size: 14px;
+  }
+  
 }
 
 li {
@@ -238,6 +258,7 @@ li button {
 }
 
 .notification {
+  font-size: 12px;
   display: none;
   top: 1rem;
   left: 50%;
@@ -246,7 +267,7 @@ li button {
   border-radius: 0.25rem;
   color: white;
   font-weight: 600;
-  box-shadow: var(--shadow);
+  box-shadow: var(--big-shadow);
   position: absolute;
 }
 
@@ -275,14 +296,6 @@ footer {
   margin-top: 2rem;
   padding: 1rem;
   border-top: 1px solid var(--light-gray);
-}
-
-@media (min-width: 768px) {
-  footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-  }
 }
 
 .none{
